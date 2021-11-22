@@ -1,12 +1,11 @@
-var express = require("express");
+import express from "express";
 var router = express.Router();
-// var mongoose = require("mongoose");
 import mongoose from "mongoose";
 import { UserModel } from "../models/user-model";
 
 const getUsers = async () => {
   try {
-    await mongoose.connect("mongodb://root:root@mongo:27017");
+    await mongoose.connect(process.env.MONGO_URL);
     const user = await UserModel.find({}).exec();
 
     return user;
