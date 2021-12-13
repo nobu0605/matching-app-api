@@ -1,16 +1,45 @@
 version: "3.1"
 
 services:
-  mongo:
+  mongodb-primary:
+    hostname: mongodb-primary
     image: mongo:4.4.5
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
+    expose:
+      - 27017
     ports:
-      - 27017:27017
+      - 27011:27017
     volumes:
       - ./db:/data/db
-      - ./configdb:/data/configdb
+    entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "rs0", "--journal", "--dbpath", "/data/db", "--enableMajorityReadConcern", "false" ]
+
+  mongodb-secondary:
+    hostname: mongodb-secondary
+    image: mongo:4.4.5
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
+    expose:
+      - 27017
+    ports:
+      - 27012:27017
+    volumes:
+      - ./db-secondary:/data/db
+    entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "rs0", "--journal", "--dbpath", "/data/db", "--enableMajorityReadConcern", "false" ]
+
+  mongodb-arbiter:
+    hostname: mongodb-arbiter
+    image: mongo:4.4.5
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
+    expose:
+    - 27017
+    ports:
+      - 27013:27017
+    entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "rs0", "--journal", "--dbpath", "/data/db", "--enableMajorityReadConcern", "false" ]
 
   node:
     build:
@@ -28,4 +57,6 @@ services:
     working_dir: /app
     command: npm run dev
     depends_on:
-      - mongo
+      - mongodb-primary
+      - mongodb-secondary
+      - mongodb-arbiter
