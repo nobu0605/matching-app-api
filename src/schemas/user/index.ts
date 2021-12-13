@@ -30,7 +30,7 @@ const resultTC = schemaComposer.createObjectTC({
   },
 })
  const createUserPost = schemaComposer.createResolver<any, any>({
-  name: 'consultationStack',
+  name: 'createUserPost',
   type: resultTC,
   resolve: async ({ args }) => {
     const session = await UserModel.startSession()
