@@ -1,4 +1,6 @@
 .env
 node_modules/
 db/
+db-arbiter/
+db-secondary/
 dist/*

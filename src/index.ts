@@ -12,7 +12,9 @@ import schema from "./schemas";
 import jwt from "jsonwebtoken";
 import { secretKey } from "./constants/config";
 
-mongoose.connect(process.env.MONGO_URL);
+mongoose.connect('mongodb://root:root@mongodb-primary:27017,mongodb-secondary:27017,mongodb-arbiter:27017',{
+  replicaSet      : 'rs0',
+})
 const app: express.Express = express();
 const port = 3000;
 
@@ -26,6 +28,14 @@ app.use(
 app.use(bodyParser.json());
 app.use("/login", loginRouter);
 app.use("/register", registerRouter);
+
+const server = new ApolloServer({
+  schema: schema,
+});
+server.applyMiddleware({
+  app,
+  path: "/graphql",
+});
 
 app.use(function (req: any, res: any, next: any) {
   let token = req.body.token || req.query.token || req.headers["access-token"];
@@ -46,13 +56,5 @@ app.use(function (req: any, res: any, next: any) {
 });
 
 app.use("/user", userRouter);
-
-const server = new ApolloServer({
-  schema: schema,
-});
-server.applyMiddleware({
-  app,
-  path: "/api",
-});
 
 app.listen(port, () => console.info(`App listening on port ${port}!`));
