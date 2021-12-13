@@ -1,4 +1,6 @@
-import { UserTC } from "../../models/user";
+import { UserTC,UserModel } from "../../models/user";
+import { PostModel } from "../../models/post";
+import { SchemaComposer } from 'graphql-compose'
 
 const UserQuery = {
   userById: UserTC.getResolver("findById"),
@@ -20,5 +22,52 @@ const UserMutation = {
   userRemoveOne: UserTC.getResolver("removeOne"),
   userRemoveMany: UserTC.getResolver("removeMany"),
 };
+const schemaComposer = new SchemaComposer<any>()
+const resultTC = schemaComposer.createObjectTC({
+  name: 'resultTC',
+  fields: {
+    result: 'Boolean',
+  },
+})
+ const createUserPost = schemaComposer.createResolver<any, any>({
+  name: 'consultationStack',
+  type: resultTC,
+  resolve: async ({ args }) => {
+    const session = await UserModel.startSession()
 
-export { UserQuery, UserMutation };
+    await session.startTransaction()
+    try {
+      const result = await UserModel.create(
+        [
+          {
+            username:"aa",
+            email: "nobublack555@gmail.com",
+            password: "s",
+          },
+        ],
+        { session: session }
+      )
+
+      const result2 = await PostModel.create(
+        [
+          {
+            user_id: 1,
+            content:"s"
+          },
+        ],
+        { session: session }
+      )
+ 
+      await session.commitTransaction()
+    } catch (error) {
+      console.error(error)
+      await session.abortTransaction()
+    } finally {
+      await session.endSession()
+    }
+
+    return { result: true }
+  },
+})
+
+export { UserQuery, UserMutation,createUserPost };
